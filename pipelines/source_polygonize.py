@@ -9,8 +9,9 @@ SILENT = False
 
 def polygonize_tif(source, filename):
     mask_filepath = f'polygon-store/{source}/{filename}'
-    utils.run_command(f'GDAL_CACHEMAX=1024 /usr/bin/gdal_calc.py -A source-store/{source}/{filename} --outfile={mask_filepath} --calc="A*0+1" --type=Byte --overwrite', silent=SILENT)
-    utils.run_command(f'GDAL_CACHEMAX=1024 /usr/bin/gdal_polygonize.py {mask_filepath} -b 1 -f "GPKG" polygon-store/{source}/{filename}.gpkg -overwrite', silent=SILENT)
+    utils.run_command(f'GDAL_CACHEMAX=1024 gdal_calc.py -A source-store/{source}/{filename} --outfile={mask_filepath} --calc="A*0+1" --type=Byte --overwrite', silent=SILENT)
+    utils.run_command(f'GDAL_CACHEMAX=1024 gdal_polygonize.py {mask_filepath} -b 1 -f "GPKG" polygon-store/{source}/{filename}_projected.gpkg -overwrite', silent=SILENT)
+    utils.run_command(f'ogr2ogr -t_srs EPSG:4326 polygon-store/{source}/{filename}.gpkg polygon-store/{source}/{filename}_projected.gpkg -overwrite', silent=SILENT)
     os.remove(mask_filepath)
 
 def get_filenames(source):
@@ -40,8 +41,8 @@ def merge_source(source):
     for j, filename in enumerate(filenames[1:]):
         if j % 100 == 0:
             print(f'{j:_} / {len(filenames):_}')
-        command = f'ogr2ogr -f GPKG -update -append {merged_filepath} polygon-store/{source}/{filename}.gpkg -nln out -append -addfields'
-        utils.run_command(command, silent=True)
+        command = f'ogr2ogr -f GPKG -update -append {merged_filepath} polygon-store/{source}/{filename}.gpkg -nln out -addfields'
+        utils.run_command(command, silent=False)
     union_filepath = f'polygon-store/{source}.gpkg'
     if os.path.isfile(union_filepath):
         os.remove(union_filepath)

@@ -10,9 +10,12 @@ import utils
 SILENT = False
 
 def unzip(filepath, source):
-    filename = filepath.split('/')[-1]
-    utils.run_command(f'unzip -o "{filepath}" -d "source-store/{source}/{filename}-tmp/"', silent=SILENT)
-    utils.run_command(f'rm "{filepath}"', silent=False)
+    filename = os.path.basename(filepath)
+    target_dir = os.path.join("source-store", source, f"{filename}-tmp")
+    os.makedirs(target_dir, exist_ok=True)
+    with zipfile.ZipFile(filepath, "r") as z:
+        z.extractall(target_dir)
+    os.remove(filepath)
 
 def un7z(filepath, source):
     filename = filepath.split('/')[-1]
